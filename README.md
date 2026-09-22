@@ -73,10 +73,19 @@ node scripts/ui-smoke.mjs
 Сборка выполняется автоматически в GitHub Actions (`.github/workflows/build.yml`):
 
 1. Залейте проект на GitHub и откройте вкладку **Actions**.
-2. Запустите workflow **CI** (или просто сделайте push).
+2. Запустите workflow **CI** (или просто сделайте push) — публикация релизов
+   отключена (`--publish never`), всё сохраняется в артефакты запуска.
 3. Готовые артефакты — внизу страницы запуска:
-   - `PG-Studio-mac` — `PG Studio-*.dmg` (архитектуры x64 и arm64),
-   - `PG-Studio-windows` — установщик `.exe`.
+   - `PG-Studio-mac` — `PG Studio-0.1.0-arm64.dmg` (Apple Silicon) и
+     `PG Studio-0.1.0.dmg` (Intel),
+   - `PG-Studio-windows` — установщик `PG Studio Setup 0.1.0.exe`.
+
+Либо через GitHub CLI, не открывая браузер:
+
+```bash
+gh run list --limit 5
+gh run download <id> --name PG-Studio-mac
+```
 
 Локально на Mac:
 
@@ -84,6 +93,10 @@ node scripts/ui-smoke.mjs
 npm install
 npm run dist:mac   # release/PG Studio-*.dmg
 ```
+
+Имя файла зависит от архитектуры: `PG Studio-0.1.0-arm64.dmg` (Apple Silicon)
+и `PG Studio-0.1.0.dmg` (Intel). Соответствие можно увидеть и в логе запуска
+Actions.
 
 ### Подпись приложения
 
