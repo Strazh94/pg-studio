@@ -1,0 +1,53 @@
+{
+  "name": "pg-studio",
+  "version": "0.1.0",
+  "description": "Настольный редактор и клиент PostgreSQL",
+  "productName": "PG Studio",
+  "author": {
+    "name": "PG Studio"
+  },
+  "private": true,
+  "license": "MIT",
+  "main": "build/electron/main.js",
+  "scripts": {
+    "compile:electron": "tsc -p tsconfig.electron.json",
+    "dev": "npm run compile:electron && concurrently -k -n tsc,vite,app \"npm:tsc\" \"npm:vite\" \"npm:app:dev\"",
+    "tsc": "tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
+    "vite": "vite",
+    "app:dev": "wait-on -t 120000 tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .",
+    "start": "electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "build:renderer": "vite build",
+    "build": "npm run compile:electron && npm run build:renderer",
+    "test": "vitest run",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@lezer/highlight": "^1.2.3",
+    "codemirror": "^6.0.2",
+    "pg": "^8.23.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1",
+    "wait-on": "^9.1.0"
+  }
+}
