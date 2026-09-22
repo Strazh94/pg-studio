@@ -201,13 +201,37 @@ describe.runIf(enabled)('интеграция с PostgreSQL', () => {
       queryId,
       sql: 'SELECT pg_sleep(20)',
     });
+    // Обработчик вешаем сразу же: отклонение может прийти раньше, чем мы
+    // дождёмся старта на сервере, иначе поймаем unhandled rejection.
+    const outcome = running.then(
+      () => ({ ok: true as const }),
+      (error: unknown) => ({ ok: false as const, error }),
+    );
 
-    // ждём, пока запрос реально стартует на сервере
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    // Ждём, пока запрос реально начнёт выполняться на сервере,
+    // вместо фиксированной паузы (в CI тайминги другие).
+    const deadline = Date.now() + 15_000;
+    for (;;) {
+      const probe = await db.runQuery({
+        connectionId,
+        queryId: `probe-${queryId}`,
+        sql: `SELECT count(*)::int AS c
+                FROM pg_stat_activity
+               WHERE state = 'active'
+                 AND pid <> pg_backend_pid()
+                 AND position('pg_sleep' in query) > 0`,
+      });
+      if (((probe.rows[0]?.[0] as number) ?? 0) > 0) break;
+      if (Date.now() > deadline) throw new Error('длинный запрос не стартовал за 15 с');
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     const cancelled = await db.cancelQuery({ connectionId, queryId });
     expect(cancelled).toBe(true);
 
-    await expect(running).rejects.toThrow(/canceling statement/i);
+    const result = await outcome;
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : String(result.error)).toMatch(/canceling statement/i);
   });
 
   it('ошибка SQL возвращается как понятное исключение', async () => {
